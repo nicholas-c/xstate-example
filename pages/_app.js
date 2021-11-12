@@ -113,7 +113,7 @@ const App = () => {
             spacing="none"
             onClick={() => send("GO_TO_RESET_PASSWORD")}
           >
-            I've forgotten my password
+            Forgotten my password
           </Button>
         </ButtonGroup>
 
