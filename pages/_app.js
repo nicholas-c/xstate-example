@@ -1,81 +1,49 @@
-import "../styles/globals.css";
-import { createMachine } from "xstate";
+import { toggleMachine } from "../utils/authMachine";
+import { useEffect } from "react";
+import Button, { ButtonGroup, LoadingButton } from "@atlaskit/button";
 import { useMachine } from "@xstate/react";
+import TextField from "@atlaskit/textfield";
 
-const formState = {
-  form: {
-    on: {
-      SUBMIT: "loading",
-    },
-  },
-  loading: {
-    on: {
-      SUCCESS: "success",
-      FAILED: "form",
-    },
-  },
-  success: {
-    type: "final",
-  },
-};
+import Form, { FormSection, FormFooter, Field } from "@atlaskit/form";
 
-const toggleMachine = createMachine({
-  id: "auth",
-  initial: "landing",
-  states: {
-    landing: {
-      on: {
-        GO_TO_LOGIN: "login.form",
-        GO_TO_REGISTER: "register.form",
-      },
-    },
-    login: {
-      id: "login",
-      on: {
-        GO_TO_REGISTER: "register.form",
-      },
-      states: {
-        ...formState,
-        form: {
-          ...formState.form,
-          on: {
-            ...formState.form.on,
-            GO_TO_RESET_PASSWORD: "#auth.resetPassword.form",
-          },
-        },
-      },
-    },
-    resetPassword: {
-      on: {
-        GO_TO_LOGIN: "login.form",
-      },
-      states: formState,
-    },
-    register: {
-      on: {
-        GO_TO_LOGIN: "login.form",
-      },
-      states: formState,
-    },
-  },
-});
+const App = () => {
+  // Hacky, I know
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerText = `body {
+      font-family: 'Roboto', sans-serif;
+  }`;
+    const head = document.getElementsByTagName("head")[0];
+    head.appendChild(style);
+  }, []);
 
-function MyApp({ Component, pageProps }) {
   const [state, send] = useMachine(toggleMachine);
 
   if (state.matches("landing")) {
     return (
-      <>
+      <div style={{ maxWidth: "420px", margin: "0 auto" }}>
         <h1>Landing</h1>
 
-        <button type="button" onClick={() => send("GO_TO_LOGIN")}>
-          Login
-        </button>
+        <ButtonGroup>
+          <Button
+            type="button"
+            onClick={() => send("GO_TO_LOGIN")}
+            appearance="primary"
+            shouldFitContainer
+          >
+            Login
+          </Button>
 
-        <button type="button" onClick={() => send("GO_TO_REGISTER")}>
-          Register
-        </button>
-      </>
+          <Button
+            type="button"
+            onClick={() => send("GO_TO_REGISTER")}
+            appearance="primary"
+            shouldFitContainer
+          >
+            Register
+          </Button>
+        </ButtonGroup>
+      </div>
     );
   }
 
@@ -91,35 +59,76 @@ function MyApp({ Component, pageProps }) {
     }
 
     return (
-      <>
-        <h1>Login plz</h1>
+      <form style={{ maxWidth: "420px", margin: "0 auto" }}>
+        <h1>Login</h1>
 
-        <form>
-          <input placeholder="name" />
+        <FormSection>
+          <Field
+            aria-required={true}
+            name="username"
+            label="Username"
+            isRequired
+          >
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" {...fieldProps} />
+              </>
+            )}
+          </Field>
 
-          {state.matches("login.loading") && <LoadingComp />}
+          <Field
+            aria-required={true}
+            name="password"
+            label="Password"
+            x
+            isRequired
+          >
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" type="password" {...fieldProps} />
+              </>
+            )}
+          </Field>
+        </FormSection>
 
-          <div>
-            <button
+        {state.matches("login.loading") && <LoadingComp />}
+
+        <FormFooter>
+          <ButtonGroup>
+            <LoadingButton
               type="button"
+              appearance="primary"
               onClick={() => send("SUBMIT")}
-              disabled={state.matches("login.loading")}
+              isLoading={state.matches("login.loading")}
             >
               Login
-            </button>
-          </div>
+            </LoadingButton>
+          </ButtonGroup>
+        </FormFooter>
 
-          <div>
-            <button type="button" onClick={() => send("GO_TO_RESET_PASSWORD")}>
-              Forgotten Password
-            </button>
+        <ButtonGroup>
+          <Button
+            type="button"
+            appearance="link"
+            spacing="none"
+            onClick={() => send("GO_TO_RESET_PASSWORD")}
+          >
+            I've forgotten my password
+          </Button>
+        </ButtonGroup>
 
-            <button type="button" onClick={() => send("GO_TO_REGISTER")}>
-              Register
-            </button>
-          </div>
-        </form>
-      </>
+        <ButtonGroup>
+          New to Gymshark?
+          <Button
+            type="button"
+            appearance="link"
+            spacing="none"
+            onClick={() => send("GO_TO_REGISTER")}
+          >
+            Create An Account
+          </Button>
+        </ButtonGroup>
+      </form>
     );
   }
 
@@ -129,31 +138,72 @@ function MyApp({ Component, pageProps }) {
     }
 
     return (
-      <>
+      <form style={{ maxWidth: "420px", margin: "0 auto" }}>
         <h1>Register</h1>
 
-        <form>
-          <input placeholder="name" />
+        <FormSection>
+          <Field aria-required={true} name="name" label="Name" isRequired>
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" {...fieldProps} />
+              </>
+            )}
+          </Field>
+          <Field
+            aria-required={true}
+            name="email"
+            label="Email address"
+            isRequired
+          >
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" {...fieldProps} />
+              </>
+            )}
+          </Field>
 
-          {state.matches("register.loading") && <LoadingComp />}
+          <Field
+            aria-required={true}
+            name="password"
+            label="Password"
+            x
+            isRequired
+          >
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" type="password" {...fieldProps} />
+              </>
+            )}
+          </Field>
+        </FormSection>
 
-          <div>
-            <button
+        {state.matches("register.loading") && <LoadingComp />}
+
+        <FormFooter>
+          <ButtonGroup>
+            <LoadingButton
               type="button"
+              appearance="primary"
               onClick={() => send("SUBMIT")}
-              disabled={state.matches("register.loading")}
+              isLoading={state.matches("register.loading")}
             >
-              Create Account
-            </button>
-          </div>
+              Register
+            </LoadingButton>
+          </ButtonGroup>
+        </FormFooter>
 
-          <div>
-            <button type="button" onClick={() => send("GO_TO_LOGIN")}>
-              Back to Login
-            </button>
-          </div>
-        </form>
-      </>
+        <ButtonGroup>
+          Already registered?
+          <Button
+            type="button"
+            appearance="link"
+            spacing="none"
+            onClick={() => send("GO_TO_LOGIN")}
+          >
+            Sign Into Your Account
+          </Button>
+        </ButtonGroup>
+      </form>
     );
   }
 
@@ -163,25 +213,52 @@ function MyApp({ Component, pageProps }) {
     }
 
     return (
-      <>
-        <h1>Forgotten Password!</h1>
+      <form style={{ maxWidth: "420px", margin: "0 auto" }}>
+        <h1>Forgotten Password</h1>
+
+        <FormSection>
+          <Field
+            aria-required={true}
+            name="email"
+            label="Email address"
+            isRequired
+          >
+            {({ fieldProps, error }) => (
+              <>
+                <TextField autoComplete="off" {...fieldProps} />
+              </>
+            )}
+          </Field>
+        </FormSection>
 
         {state.matches("resetPassword.loading") && <LoadingComp />}
 
-        <button
-          type="button"
-          onClick={() => send("SUBMIT")}
-          disabled={state.matches("resetPassword.loading")}
-        >
-          Reset Password
-        </button>
+        <FormFooter>
+          <ButtonGroup>
+            <LoadingButton
+              type="button"
+              appearance="primary"
+              onClick={() => send("SUBMIT")}
+              isLoading={state.matches("resetPassword.loading")}
+            >
+              Reset Password
+            </LoadingButton>
+          </ButtonGroup>
+        </FormFooter>
 
-        <button type="button" onClick={() => send("GO_TO_LOGIN")}>
-          Back to Login
-        </button>
-      </>
+        <ButtonGroup>
+          <Button
+            type="button"
+            appearance="link"
+            spacing="none"
+            onClick={() => send("GO_TO_LOGIN")}
+          >
+            Back to Login
+          </Button>
+        </ButtonGroup>
+      </form>
     );
   }
-}
+};
 
-export default MyApp;
+export default App;
